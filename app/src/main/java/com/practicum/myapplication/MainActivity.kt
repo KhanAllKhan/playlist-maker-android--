@@ -4,14 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
-import com.practicum.myapplication.screen.MainScreen
+import androidx.compose.material3.Surface
+import androidx.navigation.compose.rememberNavController
+import com.practicum.myapplication.navigation.PlaylistHost
+import com.practicum.myapplication.ui.themes.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                MainScreen()
+            MyApplicationTheme {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    val navController = rememberNavController()
+                    PlaylistHost(navController = navController)
+                }
             }
         }
     }

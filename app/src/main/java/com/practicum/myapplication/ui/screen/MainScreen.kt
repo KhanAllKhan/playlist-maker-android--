@@ -1,6 +1,5 @@
-package com.practicum.myapplication.screen
+package com.practicum.myapplication.ui.screen
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,17 +7,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.practicum.myapplication.R
-import com.practicum.myapplication.SearchActivity
-import com.practicum.myapplication.SettingsActivity
 
 @Composable
-fun MainScreen() {
-    val context = LocalContext.current
-
+fun MainScreen(
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onPlaylistsClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,33 +43,25 @@ fun MainScreen() {
             MenuItem(
                 text = "Поиск",
                 icon = R.drawable.ic_search,
-                onClick = {
-                    context.startActivity(
-                        Intent(context, SearchActivity::class.java)
-                    )
-                }
+                onClick = onSearchClick
             )
 
             MenuItem(
                 text = "Плейлисты",
                 icon = R.drawable.ic_playlist,
-                onClick = { }
+                onClick = onPlaylistsClick // Используем новый параметр
             )
 
             MenuItem(
                 text = "Избранное",
                 icon = R.drawable.ic_favorite,
-                onClick = { }
+                onClick = { /* TODO: Добавить навигацию к избранному */ }
             )
 
             MenuItem(
                 text = "Настройки",
                 icon = R.drawable.ic_settings,
-                onClick = {
-                    context.startActivity(
-                        Intent(context, SettingsActivity::class.java)
-                    )
-                }
+                onClick = onSettingsClick
             )
         }
     }

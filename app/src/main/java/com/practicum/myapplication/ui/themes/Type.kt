@@ -1,4 +1,4 @@
-package com.practicum.myapplication.ui.theme
+package com.practicum.myapplication.ui.themes
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
