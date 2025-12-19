@@ -1,4 +1,4 @@
-package com.practicum.myapplication.ui.theme
+package com.practicum.myapplication.ui.themes
 
 import androidx.compose.ui.graphics.Color
 

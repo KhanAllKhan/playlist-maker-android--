@@ -1,4 +1,4 @@
-package com.practicum.myapplication.screen
+package com.practicum.myapplication.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
