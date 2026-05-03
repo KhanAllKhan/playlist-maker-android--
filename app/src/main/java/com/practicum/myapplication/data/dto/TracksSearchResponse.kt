@@ -2,4 +2,7 @@ package com.practicum.myapplication.data.dto
 
 import com.practicum.myapplication.domain.client.BaseResponse
 
-class TracksSearchResponse(val results: List<TrackDto>) : BaseResponse()
+data class TracksSearchResponse(
+    val resultCount: Int,
+    val results: List<TrackDto>
+) : BaseResponse()

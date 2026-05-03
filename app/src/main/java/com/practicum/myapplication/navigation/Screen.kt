@@ -7,5 +7,6 @@ enum class Screen {
     ALL_TRACKS,
     FAVORITES,
     NEW_PLAYLIST,
-    TRACK_DETAILS
+    TRACK_DETAILS,
+    PLAYLIST_DETAILS
 }

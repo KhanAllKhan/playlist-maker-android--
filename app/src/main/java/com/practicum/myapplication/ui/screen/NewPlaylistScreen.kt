@@ -7,12 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.practicum.myapplication.ui.viewmodel.PlaylistsViewModel
+import com.practicum.myapplication.ui.viewmodel.AllPlaylistsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewPlaylistScreen(
-    viewModel: PlaylistsViewModel,
+    viewModel: AllPlaylistsViewModel,
     onBackClick: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }

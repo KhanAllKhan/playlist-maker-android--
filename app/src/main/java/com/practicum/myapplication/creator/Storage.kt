@@ -7,52 +7,62 @@ class Storage {
         TrackDto(
             trackName = "Владивосток 2000",
             artistName = "Мумий Троль",
-            trackTimeMillis = 158000
+            trackTimeMillis = 158000,
+            artworkUrl100 = null // Добавьте это поле
         ),
         TrackDto(
             trackName = "Группа крови",
             artistName = "Кино",
-            trackTimeMillis = 283000
+            trackTimeMillis = 283000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Не смотри назад",
             artistName = "Ария",
-            trackTimeMillis = 312000
+            trackTimeMillis = 312000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Звезда по имени Солнце",
             artistName = "Кино",
-            trackTimeMillis = 225000
+            trackTimeMillis = 225000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Лондон",
             artistName = "Аквариум",
-            trackTimeMillis = 272000
+            trackTimeMillis = 272000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "На заре",
             artistName = "Альянс",
-            trackTimeMillis = 230000
+            trackTimeMillis = 230000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Peremen",
             artistName = "Кино",
-            trackTimeMillis = 296000
+            trackTimeMillis = 296000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Розовый фламинго",
             artistName = "Сплин",
-            trackTimeMillis = 195000
+            trackTimeMillis = 195000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Танцевать",
             artistName = "Мельница",
-            trackTimeMillis = 222000
+            trackTimeMillis = 222000,
+            artworkUrl100 = null
         ),
         TrackDto(
             trackName = "Чёрный бумер",
             artistName = "Серега",
-            trackTimeMillis = 241000
+            trackTimeMillis = 241000,
+            artworkUrl100 = null
         )
     )
 
