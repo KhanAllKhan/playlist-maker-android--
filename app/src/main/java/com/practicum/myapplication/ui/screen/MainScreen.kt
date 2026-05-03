@@ -49,7 +49,7 @@ fun MainScreen(
             MenuItem(
                 text = "Плейлисты",
                 icon = R.drawable.ic_playlist,
-                onClick = onPlaylistsClick // Используем новый параметр
+                onClick = onPlaylistsClick
             )
 
             MenuItem(
