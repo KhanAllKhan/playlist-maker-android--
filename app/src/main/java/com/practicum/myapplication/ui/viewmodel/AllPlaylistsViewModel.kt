@@ -1,11 +1,10 @@
 package com.practicum.myapplication.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.practicum.myapplication.creator.DatabaseMock
-import com.practicum.myapplication.data.network.RetrofitNetworkClient
-import com.practicum.myapplication.data.repository.PlaylistsRepositoryImpl
-import com.practicum.myapplication.data.repository.TracksRepositoryImpl
+import com.practicum.myapplication.creator.Creator
 import com.practicum.myapplication.domain.model.Playlist
 import com.practicum.myapplication.domain.model.Track
 import com.practicum.myapplication.domain.repository.PlaylistsRepository
@@ -14,20 +13,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class AllPlaylistsViewModel : ViewModel() {
-    private val databaseMock = DatabaseMock(viewModelScope)
+class AllPlaylistsViewModel(
+    private val playlistsRepository: PlaylistsRepository,
+    private val tracksRepository: TracksRepository
+) : ViewModel() {
 
-    // Создаем клиент для сетевых запросов
-    private val networkClient = RetrofitNetworkClient()
-
-    private val playlistsRepository: PlaylistsRepository = PlaylistsRepositoryImpl(viewModelScope, databaseMock)
-
-    private val tracksRepository: TracksRepository = TracksRepositoryImpl(
-        viewModelScope,
-        databaseMock,
-        networkClient
-    )
-
+    // Теперь данные текут из Room
     val playlists: Flow<List<Playlist>> = playlistsRepository.getAllPlaylists()
     val favoriteList: Flow<List<Track>> = tracksRepository.getFavoriteTracks()
 
@@ -47,5 +38,18 @@ class AllPlaylistsViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             tracksRepository.updateTrackFavoriteStatus(track, isFavorite)
         }
+    }
+
+    companion object {
+        fun getViewModelFactory(context: Context): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return AllPlaylistsViewModel(
+                        Creator.getPlaylistsRepository(context),
+                        Creator.getTracksRepository(context)
+                    ) as T
+                }
+            }
     }
 }

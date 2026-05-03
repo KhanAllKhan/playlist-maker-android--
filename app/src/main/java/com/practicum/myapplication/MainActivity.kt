@@ -19,8 +19,9 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
 
-                    val allPlaylistsViewModel: AllPlaylistsViewModel = viewModel()
-
+                    val allPlaylistsViewModel: AllPlaylistsViewModel = viewModel(
+                        factory = AllPlaylistsViewModel.getViewModelFactory(applicationContext)
+                    )
 
                     PlaylistHost(
                         navController = navController,

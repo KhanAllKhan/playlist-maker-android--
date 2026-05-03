@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // 1. Добавляем плагин Kapt для обработки аннотаций Room
+    id("kotlin-kapt")
 }
 
 android {
@@ -60,4 +62,14 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.3")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Корутины
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // 2. ЗАВИСИМОСТИ ROOM
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion") // Для поддержки корутин в DAO
+    kapt("androidx.room:room-compiler:$roomVersion") // Процессор аннотаций
 }

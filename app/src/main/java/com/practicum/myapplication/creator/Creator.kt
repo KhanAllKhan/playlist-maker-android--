@@ -1,31 +1,34 @@
 package com.practicum.myapplication.creator
 
+import android.content.Context
+import androidx.datastore.preferences.preferencesDataStore
+import com.practicum.myapplication.data.db.AppDatabase
 import com.practicum.myapplication.data.network.RetrofitNetworkClient
-import com.practicum.myapplication.data.repository.PlaylistsRepositoryImpl
-import com.practicum.myapplication.data.repository.TracksRepositoryImpl
-import com.practicum.myapplication.domain.repository.PlaylistsRepository
-import com.practicum.myapplication.domain.repository.TracksRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
+import com.practicum.myapplication.data.repository.*
+import com.practicum.myapplication.domain.repository.*
+import ru.yandex.practicum.playlistmaker.data.preferences.SearchHistoryPreferences
+
+
+private val Context.dataStore by preferencesDataStore(name = "settings")
 
 object Creator {
+    private var database: AppDatabase? = null
 
-    private val databaseMock by lazy { DatabaseMock(GlobalScope) }
-
-    private val networkClient by lazy { RetrofitNetworkClient() }
-
-    fun getTracksRepository(scope: CoroutineScope = GlobalScope): TracksRepository {
-        return TracksRepositoryImpl(
-            scope = scope,
-            database = databaseMock,
-            networkClient = networkClient
-        )
+    private fun getDatabase(context: Context): AppDatabase {
+        return database ?: synchronized(this) {
+            database ?: AppDatabase.getInstance(context).also { database = it }
+        }
     }
 
-    fun getPlaylistsRepository(scope: CoroutineScope = GlobalScope): PlaylistsRepository {
-        return PlaylistsRepositoryImpl(
-            scope = scope,
-            database = databaseMock
-        )
+    fun getTracksRepository(context: Context): TracksRepository {
+        return TracksRepositoryImpl(getDatabase(context), RetrofitNetworkClient())
+    }
+
+    fun getPlaylistsRepository(context: Context): PlaylistsRepository {
+        return PlaylistsRepositoryImpl(getDatabase(context))
+    }
+
+    fun getSearchHistoryRepository(context: Context): SearchHistoryRepository {
+        return SearchHistoryRepositoryImpl(SearchHistoryPreferences(context.dataStore))
     }
 }

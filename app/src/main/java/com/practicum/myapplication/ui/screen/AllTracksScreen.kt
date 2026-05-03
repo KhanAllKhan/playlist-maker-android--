@@ -1,7 +1,6 @@
 package com.practicum.myapplication.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,14 +29,21 @@ fun AllTracksScreen(
     onBackClick: () -> Unit = {},
     onNewPlaylistClick: () -> Unit = {},
     onTrackClick: (Track) -> Unit = {},
-    viewModel: TracksViewModel = viewModel(
+) {
+    // Получаем контекст для Creator
+    val context = LocalContext.current.applicationContext
+
+    // Переносим инициализацию ViewModel внутрь тела функции, чтобы использовать context
+    val viewModel: TracksViewModel = viewModel(
         factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return TracksViewModel(Creator.getTracksRepository()) as T
+                // Передаем полученный контекст
+                return TracksViewModel(Creator.getTracksRepository(context)) as T
             }
         }
     )
-) {
+
     val screenState by viewModel.allTracksScreenState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -105,12 +112,9 @@ fun AllTracksScreen(
                             .padding(horizontal = 16.dp)
                     ) {
                         items(tracks) { track ->
-                            // Убрали лишнюю Column, так как Divider можно отрисовать прямо в LazyColumn
                             TrackListItem(
                                 track = track,
-                                // ИСПРАВЛЕНО: Теперь передаем onClick как параметр
                                 onClick = { onTrackClick(track) },
-                                // ИСПРАВЛЕНО: Убрали .clickable из Modifier, так как он теперь внутри компонента
                                 modifier = Modifier.padding(vertical = 12.dp)
                             )
                             HorizontalDivider(
