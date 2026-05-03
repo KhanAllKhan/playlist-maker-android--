@@ -71,7 +71,7 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Поле поиска
+
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },

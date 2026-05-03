@@ -42,7 +42,7 @@ fun AllTracksScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Заголовок
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -65,10 +65,10 @@ fun AllTracksScreen(
             )
         }
 
-        // Контент
+
         when (screenState) {
             is SearchState.Initial -> {
-                // Пустое состояние
+
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center

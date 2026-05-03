@@ -23,11 +23,11 @@ class SearchViewModel(
     fun search(whatSearch: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _searchScreenState.update { SearchState.Loading }  // Loading вместо Searching
+                _searchScreenState.update { SearchState.Loading }
                 val list = tracksRepository.searchTracks(expression = whatSearch)
-                _searchScreenState.update { SearchState.Success(foundList = list) }  // foundList вместо list
+                _searchScreenState.update { SearchState.Success(foundList = list) }
             } catch (e: IOException) {
-                _searchScreenState.update { SearchState.Error(e.message.toString()) }  // Error вместо Fail
+                _searchScreenState.update { SearchState.Error(e.message.toString()) }
             }
         }
     }
