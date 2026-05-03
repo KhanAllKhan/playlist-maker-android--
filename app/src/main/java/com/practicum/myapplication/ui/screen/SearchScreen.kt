@@ -20,21 +20,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.practicum.myapplication.R
 import com.practicum.myapplication.domain.model.SearchState
+import com.practicum.myapplication.domain.model.Track
 import com.practicum.myapplication.ui.components.TrackListItem
+import com.practicum.myapplication.ui.viewmodel.SearchViewModel
 
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    viewModel: com.practicum.myapplication.ui.viewmodel.SearchViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return com.practicum.myapplication.ui.viewmodel.SearchViewModel(
-                    com.practicum.myapplication.creator.Creator.getTracksRepository()
-                ) as T
-            }
-        }
-    )
+    onTrackClick: (Track) -> Unit = {},
+    viewModel: SearchViewModel = viewModel(factory = SearchViewModel.getViewModelFactory())
 ) {
     var searchText by remember { mutableStateOf("") }
     val screenState by viewModel.searchScreenState.collectAsState()
@@ -54,7 +48,7 @@ fun SearchScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "Назад",
+                    contentDescription = null,
                     tint = Color.White
                 )
             }
@@ -71,20 +65,17 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-
             OutlinedTextField(
                 value = searchText,
-                onValueChange = { searchText = it },
+                onValueChange = {
+                    searchText = it
+                    if (it.isNotEmpty()) viewModel.search(it) else viewModel.clearSearch()
+                },
                 placeholder = { Text("Введите название трека") },
                 leadingIcon = {
                     Icon(
-                        modifier = Modifier.clickable {
-                            if (searchText.isNotBlank()) {
-                                viewModel.search(searchText)
-                            }
-                        },
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Поиск"
+                        contentDescription = null
                     )
                 },
                 trailingIcon = {
@@ -93,40 +84,18 @@ fun SearchScreen(
                             searchText = ""
                             viewModel.clearSearch()
                         }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Очистить")
+                            Icon(Icons.Default.Clear, contentDescription = null)
                         }
                     }
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedIndicatorColor = Color.Gray,
-                    unfocusedIndicatorColor = Color.LightGray
-                )
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             when (screenState) {
-                is SearchState.Initial -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 32.dp),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        Text(
-                            text = "Введите строку для поиска",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-
                 is SearchState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -138,52 +107,37 @@ fun SearchScreen(
 
                 is SearchState.Success -> {
                     val tracks = (screenState as SearchState.Success).foundList
-                    if (tracks.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Ничего не найдено",
-                                color = Color.Gray,
-                                fontSize = 16.sp
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tracks) { track ->
+                            TrackListItem(
+                                track = track,
+                                showDivider = true,
+                                modifier = Modifier
+                                    .clickable { onTrackClick(track) }
+                                    .padding(vertical = 8.dp)
                             )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(tracks) { track ->
-                                TrackListItem(
-                                    track = track,
-                                    showDivider = true,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
                         }
                     }
                 }
 
                 is SearchState.Error -> {
-                    val error = (screenState as SearchState.Error).error
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Ошибка",
-                                color = Color.Red,
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = error,
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            )
-                        }
+                        Text(text = (screenState as SearchState.Error).error, color = Color.Red)
+                    }
+                }
+
+                else -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Введите строку для поиска", color = Color.Gray)
                     }
                 }
             }

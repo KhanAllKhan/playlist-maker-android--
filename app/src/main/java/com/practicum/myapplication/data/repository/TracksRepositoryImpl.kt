@@ -1,48 +1,45 @@
 package com.practicum.myapplication.data.repository
 
-import com.practicum.myapplication.data.dto.TracksSearchRequest
-import com.practicum.myapplication.data.dto.TracksSearchResponse
-import com.practicum.myapplication.domain.client.NetworkClient
+import com.practicum.myapplication.creator.DatabaseMock
 import com.practicum.myapplication.domain.model.Track
 import com.practicum.myapplication.domain.repository.TracksRepository
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 
 class TracksRepositoryImpl(
-    private val networkClient: NetworkClient
+    private val scope: CoroutineScope,
+    private val database: DatabaseMock
 ) : TracksRepository {
 
     override suspend fun searchTracks(expression: String): List<Track> {
-        val response = networkClient.doRequest(TracksSearchRequest(expression))
-        delay(1000)
-
-        return if (response.resultCode == 200) {
-            (response as TracksSearchResponse).results.map { dtoToTrack(it) }
-        } else {
-            emptyList()
-        }
+        return database.searchTracks(expression)
     }
 
     override suspend fun getAllTracks(): List<Track> {
-        delay(1000)
-
-        return listOf(
-            Track("Владивосток 2000", "Мумий Троль", "2:38"),
-            Track("Группа крови", "Кино", "4:43"),
-            Track("Не смотри назад", "Ария", "5:12"),
-            Track("Звезда по имени Солнце", "Кино", "3:45"),
-            Track("Лондон", "Аквариум", "4:32"),
-            Track("На заре", "Альянс", "3:50"),
-            Track("Перемен", "Кино", "4:56"),
-            Track("Розовый фламинго", "Сплин", "3:15"),
-            Track("Танцевать", "Мельница", "3:42"),
-            Track("Чёрный бумер", "Серега", "4:01")
-        )
+        return database.getAllTracks()
     }
 
-    private fun dtoToTrack(dto: com.practicum.myapplication.data.dto.TrackDto): Track {
-        val seconds = dto.trackTimeMillis / 1000
-        val minutes = seconds / 60
-        val trackTime = "%02d:%02d".format(minutes, seconds % 60)
-        return Track(dto.trackName, dto.artistName, trackTime)
+    override fun getTrackByNameAndArtist(track: Track): Flow<Track?> {
+        return database.getTrackByNameAndArtist(track)
+    }
+
+    override suspend fun insertTrackToPlaylist(track: Track, playlistId: Long) {
+        database.insertTrack(track.copy(playlistId = playlistId))
+    }
+
+    override suspend fun deleteTrackFromPlaylist(track: Track) {
+        database.insertTrack(track.copy(playlistId = 0))
+    }
+
+    override suspend fun updateTrackFavoriteStatus(track: Track, isFavorite: Boolean) {
+        database.insertTrack(track.copy(favorite = isFavorite))
+    }
+
+    override fun deleteTracksByPlaylistId(playlistId: Long) {
+        database.deleteTracksByPlaylistId(playlistId)
+    }
+
+    override fun getFavoriteTracks(): Flow<List<Track>> {
+        return database.getFavoriteTracks()
     }
 }

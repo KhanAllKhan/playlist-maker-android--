@@ -15,14 +15,14 @@ import com.practicum.myapplication.R
 fun MainScreen(
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onPlaylistsClick: () -> Unit
+    onPlaylistsClick: () -> Unit,
+    onFavoritesClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF4B74E6))
     ) {
-
         Text(
             text = "Playlist maker",
             color = Color.White,
@@ -39,7 +39,6 @@ fun MainScreen(
                 )
                 .padding(vertical = 16.dp)
         ) {
-
             MenuItem(
                 text = "Поиск",
                 icon = R.drawable.ic_search,
@@ -55,7 +54,7 @@ fun MainScreen(
             MenuItem(
                 text = "Избранное",
                 icon = R.drawable.ic_favorite,
-                onClick = { /* TODO: Добавить навигацию к избранному */ }
+                onClick = onFavoritesClick
             )
 
             MenuItem(
