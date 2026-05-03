@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.practicum.myapplication.navigation.PlaylistHost
 import com.practicum.myapplication.ui.themes.MyApplicationTheme
-import com.practicum.myapplication.ui.viewmodel.PlaylistsViewModel
+import com.practicum.myapplication.ui.viewmodel.AllPlaylistsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +19,12 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
 
-                    val playlistsViewModel: PlaylistsViewModel = viewModel()
+                    val allPlaylistsViewModel: AllPlaylistsViewModel = viewModel()
 
 
                     PlaylistHost(
                         navController = navController,
-                        playlistsViewModel = playlistsViewModel
+                        allPlaylistsViewModel = allPlaylistsViewModel
                     )
                 }
             }

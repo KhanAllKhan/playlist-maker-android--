@@ -3,86 +3,80 @@ package com.practicum.myapplication.creator
 import com.practicum.myapplication.domain.model.Playlist
 import com.practicum.myapplication.domain.model.Track
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
-class DatabaseMock(
-    private val scope: CoroutineScope,
-) {
-    private val tracks = mutableListOf(
-        Track(1, "Владивосток 2000", "Мумий Троль", "2:38"),
-        Track(2, "Группа крови", "Кино", "4:43"),
-        Track(3, "Не смотри назад", "Ария", "5:12"),
-        Track(4, "Звезда по имени Солнце", "Кино", "3:45"),
-        Track(5, "London", "Аквариум", "4:32"),
-        Track(6, "На заре", "Альянс", "3:50"),
-        Track(7, "Перемен", "Кино", "4:56"),
-        Track(8, "Розовый фламинго", "Сплин", "3:15"),
-        Track(9, "Танцевать", "Мельница", "3:42"),
-        Track(10, "Чёрный бумер", "Серега", "4:01")
+class DatabaseMock(private val scope: CoroutineScope) {
+    // Простой счётчик для ID (начинаем с 2, так как 1 занят хардкодом)
+    private var nextId = 2L
+
+    private val initialTracks = listOf(
+        Track(trackName = "Yesterday", artistName = "The Beatles", trackTime = "02:05", playlistId = 1L),
+        Track(trackName = "Stayin' Alive", artistName = "Bee Gees", trackTime = "04:45", playlistId = 1L)
+    )
+    private val initialPlaylists = listOf(
+        Playlist(id = 1L, name = "Тестовый плейлист", description = "Если ты это видишь, база работает")
     )
 
-    private val playlists = mutableListOf<Playlist>()
+    private val allTracks = MutableStateFlow<List<Track>>(initialTracks)
+    private val allPlaylists = MutableStateFlow<List<Playlist>>(initialPlaylists)
 
-    fun getAllTracks(): List<Track> = tracks.toList()
-
-    fun getPlaylist(id: Long): Flow<Playlist?> = flow {
-        emit(playlists.find { it.id == id })
+    fun insertTrack(track: Track) {
+        val currentList = allTracks.value.toMutableList()
+        val index = currentList.indexOfFirst {
+            it.trackName == track.trackName && it.artistName == track.artistName
+        }
+        if (index != -1) {
+            currentList[index] = track
+        } else {
+            currentList.add(track)
+        }
+        allTracks.value = currentList
     }
 
-    fun getAllPlaylists(): Flow<List<Playlist>> = flow {
-        delay(500)
-        val filteredPlaylists = mutableListOf<Playlist>()
-        playlists.forEach { playlist ->
-            val playlistTracks = tracks.filter { it.playlistId == playlist.id }
-            filteredPlaylists.add(playlist.copy(tracks = playlistTracks))
+    fun getAllPlaylists(): Flow<List<Playlist>> {
+        return combine(allPlaylists, allTracks) { playlists, tracks ->
+            playlists.map { playlist ->
+                playlist.copy(tracks = tracks.filter { it.playlistId == playlist.id })
+            }
         }
-        emit(filteredPlaylists.toList())
+    }
+
+    fun getPlaylist(playlistId: Long): Flow<Playlist?> {
+        return combine(allPlaylists, allTracks) { playlists, tracks ->
+            playlists.find { it.id == playlistId }?.copy(
+                tracks = tracks.filter { it.playlistId == playlistId }
+            )
+        }
     }
 
     fun addNewPlaylist(name: String, description: String) {
-        playlists.add(
-            Playlist(
-                id = playlists.size.toLong() + 1,
-                name = name,
-                description = description,
-                tracks = emptyList()
-            )
-        )
+        val newList = allPlaylists.value.toMutableList()
+        val idForNew = nextId++ // Используем простой Long ID
+        newList.add(Playlist(id = idForNew, name = name, description = description))
+        allPlaylists.value = newList
     }
 
-    fun getTrackByNameAndArtist(track: Track): Flow<Track?> = flow {
-        emit(tracks.find { it.trackName == track.trackName && it.artistName == track.artistName })
-    }
+    fun getAllTracks(): List<Track> = allTracks.value
 
-    fun insertTrack(track: Track) {
-        val index = tracks.indexOfFirst { it.id == track.id }
-        if (index != -1) {
-            tracks[index] = track
-        } else {
-            tracks.add(track)
-        }
-    }
-
-    fun getFavoriteTracks(): Flow<List<Track>> = flow {
-        delay(300)
-        emit(tracks.filter { it.favorite })
-    }
-
-    fun searchTracks(expression: String): List<Track> {
-        return tracks.filter { it.trackName.contains(expression, true) }
-    }
-
-    fun deletePlaylistById(playlistId: Long) {
-        playlists.removeIf { it.id == playlistId }
+    // ИСПРАВЛЕНО: Теперь этот метод существует и репозиторий его увидит
+    fun getTrackByNameAndArtist(track: Track): Flow<Track?> = allTracks.map { list ->
+        list.find { it.trackName == track.trackName && it.artistName == track.artistName }
     }
 
     fun deleteTracksByPlaylistId(playlistId: Long) {
-        tracks.forEachIndexed { index, track ->
-            if (track.playlistId == playlistId) {
-                tracks[index] = track.copy(playlistId = 0)
-            }
+        allTracks.value = allTracks.value.map {
+            if (it.playlistId == playlistId) it.copy(playlistId = -1L) else it
         }
+    }
+
+    fun getFavoriteTracks(): Flow<List<Track>> = allTracks.map { list -> list.filter { it.favorite } }
+
+    fun deletePlaylistById(id: Long) {
+        val newList = allPlaylists.value.toMutableList()
+        newList.removeAll { it.id == id }
+        allPlaylists.value = newList
     }
 }

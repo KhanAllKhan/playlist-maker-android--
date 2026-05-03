@@ -105,18 +105,18 @@ fun AllTracksScreen(
                             .padding(horizontal = 16.dp)
                     ) {
                         items(tracks) { track ->
-                            Column {
-                                TrackListItem(
-                                    track = track,
-                                    modifier = Modifier
-                                        .clickable { onTrackClick(track) }
-                                        .padding(vertical = 12.dp)
-                                )
-                                Divider(
-                                    thickness = 0.5.dp,
-                                    color = Color.LightGray
-                                )
-                            }
+                            // Убрали лишнюю Column, так как Divider можно отрисовать прямо в LazyColumn
+                            TrackListItem(
+                                track = track,
+                                // ИСПРАВЛЕНО: Теперь передаем onClick как параметр
+                                onClick = { onTrackClick(track) },
+                                // ИСПРАВЛЕНО: Убрали .clickable из Modifier, так как он теперь внутри компонента
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+                            HorizontalDivider(
+                                thickness = 0.5.dp,
+                                color = Color.LightGray
+                            )
                         }
                     }
                 }

@@ -18,13 +18,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.practicum.myapplication.domain.model.Track
-import com.practicum.myapplication.ui.viewmodel.PlaylistsViewModel
+import com.practicum.myapplication.ui.viewmodel.AllPlaylistsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackDetailsScreen(
     track: Track,
-    viewModel: PlaylistsViewModel,
+    viewModel: AllPlaylistsViewModel,
     onBackClick: () -> Unit
 ) {
     var isFavorite by remember { mutableStateOf(track.favorite) }

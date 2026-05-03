@@ -1,7 +1,8 @@
 package com.practicum.myapplication.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,12 +17,17 @@ import com.practicum.myapplication.domain.model.Track
 fun TrackListItem(
     track: Track,
     showDivider: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (Track) -> Unit // Добавили этот параметр
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick(track) } // Теперь весь элемент реагирует на нажатие
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -50,7 +56,7 @@ fun TrackListItem(
 
         if (showDivider) {
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(thickness = 0.5.dp)
+            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
         }
     }
 }
