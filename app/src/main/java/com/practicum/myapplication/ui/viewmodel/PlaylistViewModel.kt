@@ -34,10 +34,16 @@ class PlaylistViewModel(
         }
     }
 
-    // ДОБАВЛЕНО: Удаление трека из плейлиста
     fun deleteTrack(track: Track) {
         viewModelScope.launch(Dispatchers.IO) {
             tracksRepository.deleteTrackFromPlaylist(track)
+
+            val currentPlaylist = _playlistState.value
+            if (currentPlaylist != null) {
+                val updatedTracks = currentPlaylist.tracks.filter { it != track }
+
+                _playlistState.value = currentPlaylist.copy(tracks = updatedTracks)
+            }
         }
     }
 

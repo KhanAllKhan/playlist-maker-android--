@@ -30,4 +30,7 @@ interface TrackDao {
 
     @Query("DELETE FROM track_table WHERE playlistId = :playlistId")
     suspend fun deleteTracksByPlaylistId(playlistId: Long)
+
+    @Query("DELETE FROM track_table WHERE trackName = :name AND artistName = :artist AND playlistId = :playlistId")
+    suspend fun removeTrack(name: String, artist: String, playlistId: Long)
 }

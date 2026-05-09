@@ -24,7 +24,7 @@ class TracksRepositoryImpl(
         if (response.resultCode == 200) {
             return (response as TracksSearchResponse).results.map {
                 Track(
-                    id = 0, // При поиске из сети ID в БД еще нет
+                    id = 0,
                     trackName = it.trackName,
                     artistName = it.artistName,
                     trackTime = SimpleDateFormat("mm:ss", Locale.getDefault()).format(it.trackTimeMillis),
@@ -36,8 +36,6 @@ class TracksRepositoryImpl(
         }
     }
 
-    // РЕАЛИЗАЦИЯ НЕДОСТАЮЩИХ МЕТОДОВ
-
     override suspend fun getAllTracks(): List<Track> {
         return trackDao.getAllTracks().map { it.toDomain() }
     }
@@ -47,14 +45,14 @@ class TracksRepositoryImpl(
     }
 
     override suspend fun deleteTrackFromPlaylist(track: Track) {
-        // Так как мы храним трек в одном плейлисте, просто удаляем запись
-        trackDao.deleteTrack(TrackEntity.fromDomain(track, track.playlistId))
+        trackDao.removeTrack(
+            name = track.trackName,
+            artist = track.artistName,
+            playlistId = track.playlistId
+        )
     }
 
     override fun deleteTracksByPlaylistId(playlistId: Long) {
-        // Мы вызываем это в корутине, но сам Room выполнит запрос
-        // Если интерфейс требует suspend, добавь suspend в описание метода
-        // Но здесь мы просто делегируем задачу DAO
         kotlinx.coroutines.runBlocking {
             trackDao.deleteTracksByPlaylistId(playlistId)
         }
@@ -65,7 +63,6 @@ class TracksRepositoryImpl(
     }
 
     override suspend fun updateTrackFavoriteStatus(track: Track, isFavorite: Boolean) {
-        // ИСПРАВЛЕНО: используем track.id вместо track.trackId
         trackDao.updateFavoriteStatus(track.id, isFavorite)
     }
 
