@@ -4,5 +4,9 @@ enum class Screen {
     MAIN,
     SEARCH,
     SETTINGS,
-    ALL_TRACKS
+    ALL_TRACKS,
+    FAVORITES,
+    NEW_PLAYLIST,
+    TRACK_DETAILS,
+    PLAYLIST_DETAILS
 }

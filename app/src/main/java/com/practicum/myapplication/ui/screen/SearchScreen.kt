@@ -14,36 +14,42 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.practicum.myapplication.R
 import com.practicum.myapplication.domain.model.SearchState
+import com.practicum.myapplication.domain.model.Track
 import com.practicum.myapplication.ui.components.TrackListItem
+import com.practicum.myapplication.ui.viewmodel.SearchViewModel
 
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    viewModel: com.practicum.myapplication.ui.viewmodel.SearchViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return com.practicum.myapplication.ui.viewmodel.SearchViewModel(
-                    com.practicum.myapplication.creator.Creator.getTracksRepository()
-                ) as T
-            }
-        }
-    )
+    onTrackClick: (Track) -> Unit = {}
 ) {
-    var searchText by remember { mutableStateOf("") }
-    val screenState by viewModel.searchScreenState.collectAsState()
+    // 1. Получаем контекст приложения для работы Creator (БД и DataStore)
+    val context = LocalContext.current.applicationContext
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
+    // 2. Инициализируем ViewModel через фабрику, передавая контекст
+    val viewModel: SearchViewModel = viewModel(
+        factory = SearchViewModel.getViewModelFactory(context)
+    )
+
+    var searchText by remember { mutableStateOf("") }
+
+    // Подписка на состояния из ViewModel
+    val screenState by viewModel.searchScreenState.collectAsState()
+    val history by viewModel.historyState.collectAsState()
+
+    val focusManager = LocalFocusManager.current
+
+    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        // --- ВЕРХНЯЯ ПАНЕЛЬ ---
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -54,137 +60,107 @@ fun SearchScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "Назад",
+                    contentDescription = null,
                     tint = Color.White
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Поиск",
-                color = Color.White,
-                fontSize = 20.sp
-            )
+            Text(text = "Поиск", color = Color.White, fontSize = 20.sp)
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            // --- ПОЛЕ ВВОДА ---
             OutlinedTextField(
                 value = searchText,
-                onValueChange = { searchText = it },
-                placeholder = { Text("Введите название трека") },
-                leadingIcon = {
-                    Icon(
-                        modifier = Modifier.clickable {
-                            if (searchText.isNotBlank()) {
-                                viewModel.search(searchText)
-                            }
-                        },
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Поиск"
-                    )
+                onValueChange = {
+                    searchText = it
+                    if (it.isNotEmpty()) {
+                        viewModel.search(it) // Выполняем поиск и сохраняем в историю
+                    } else {
+                        viewModel.clearSearch() // Очищаем и подгружаем историю[cite: 1]
+                    }
                 },
+                placeholder = { Text("Введите название трека") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
                         IconButton(onClick = {
                             searchText = ""
                             viewModel.clearSearch()
-                        }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Очистить")
-                        }
+                            focusManager.clearFocus()
+                        }) { Icon(Icons.Default.Clear, contentDescription = null) }
                     }
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedIndicatorColor = Color.Gray,
-                    unfocusedIndicatorColor = Color.LightGray
-                )
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            when (screenState) {
-                is SearchState.Initial -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 32.dp),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        Text(
-                            text = "Введите строку для поиска",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-
-                is SearchState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                is SearchState.Success -> {
-                    val tracks = (screenState as SearchState.Success).foundList
-                    if (tracks.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+            // --- КОНТЕНТ (ИСТОРИЯ ИЛИ РЕЗУЛЬТАТЫ) ---
+            if (searchText.isEmpty() && history.isNotEmpty()) {
+                // ВИЗУАЛЬНАЯ ЧАСТЬ ИСТОРИИ (Как на макете)[cite: 1]
+                Text(
+                    text = "Вы искали",
+                    modifier = Modifier.padding(bottom = 12.dp, top = 8.dp),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(history) { query ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    searchText = query
+                                    viewModel.search(query)
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Icon(
+                                // Убедись, что у тебя есть иконка ic_history (часики) в drawable
+                                painter = painterResource(id = R.drawable.ic_history),
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(text = query, fontSize = 16.sp, color = Color.Black)
+                        }
+                    }
+                }
+            } else {
+                // ОТОБРАЖЕНИЕ СОСТОЯНИЙ ПОИСКА[cite: 1]
+                when (screenState) {
+                    is SearchState.Loading -> {
+                        Box(Modifier.fillMaxSize(), Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    is SearchState.Error -> {
+                        Box(Modifier.fillMaxSize(), Alignment.Center) {
                             Text(
-                                text = "Ничего не найдено",
-                                color = Color.Gray,
-                                fontSize = 16.sp
+                                text = (screenState as SearchState.Error).error,
+                                color = Color.Red
                             )
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                    }
+                    is SearchState.Success -> {
+                        val tracks = (screenState as SearchState.Success).foundList
+                        LazyColumn(Modifier.fillMaxSize()) {
                             items(tracks) { track ->
                                 TrackListItem(
                                     track = track,
-                                    showDivider = true,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    onClick = { onTrackClick(track) }
                                 )
+                                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                             }
                         }
                     }
-                }
-
-                is SearchState.Error -> {
-                    val error = (screenState as SearchState.Error).error
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Ошибка",
-                                color = Color.Red,
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = error,
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
+                    else -> {}
                 }
             }
         }

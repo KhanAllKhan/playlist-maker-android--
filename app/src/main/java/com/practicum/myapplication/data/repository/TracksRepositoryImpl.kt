@@ -1,48 +1,74 @@
 package com.practicum.myapplication.data.repository
 
+import com.practicum.myapplication.data.db.AppDatabase
+import com.practicum.myapplication.data.db.entity.TrackEntity
 import com.practicum.myapplication.data.dto.TracksSearchRequest
 import com.practicum.myapplication.data.dto.TracksSearchResponse
 import com.practicum.myapplication.domain.client.NetworkClient
 import com.practicum.myapplication.domain.model.Track
 import com.practicum.myapplication.domain.repository.TracksRepository
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class TracksRepositoryImpl(
+    private val database: AppDatabase,
     private val networkClient: NetworkClient
 ) : TracksRepository {
 
+    private val trackDao = database.trackDao()
+
     override suspend fun searchTracks(expression: String): List<Track> {
         val response = networkClient.doRequest(TracksSearchRequest(expression))
-        delay(1000)
-
-        return if (response.resultCode == 200) {
-            (response as TracksSearchResponse).results.map { dtoToTrack(it) }
+        if (response.resultCode == 200) {
+            return (response as TracksSearchResponse).results.map {
+                Track(
+                    id = 0,
+                    trackName = it.trackName,
+                    artistName = it.artistName,
+                    trackTime = SimpleDateFormat("mm:ss", Locale.getDefault()).format(it.trackTimeMillis),
+                    artworkUrl100 = it.artworkUrl100
+                )
+            }
         } else {
-            emptyList()
+            throw Exception("Ошибка сервера")
         }
     }
 
     override suspend fun getAllTracks(): List<Track> {
-        delay(1000)
+        return trackDao.getAllTracks().map { it.toDomain() }
+    }
 
-        return listOf(
-            Track("Владивосток 2000", "Мумий Троль", "2:38"),
-            Track("Группа крови", "Кино", "4:43"),
-            Track("Не смотри назад", "Ария", "5:12"),
-            Track("Звезда по имени Солнце", "Кино", "3:45"),
-            Track("Лондон", "Аквариум", "4:32"),
-            Track("На заре", "Альянс", "3:50"),
-            Track("Перемен", "Кино", "4:56"),
-            Track("Розовый фламинго", "Сплин", "3:15"),
-            Track("Танцевать", "Мельница", "3:42"),
-            Track("Чёрный бумер", "Серега", "4:01")
+    override fun getTrackByNameAndArtist(track: Track): Flow<Track?> {
+        return trackDao.getTrack(track.trackName, track.artistName).map { it?.toDomain() }
+    }
+
+    override suspend fun deleteTrackFromPlaylist(track: Track) {
+        trackDao.removeTrack(
+            name = track.trackName,
+            artist = track.artistName,
+            playlistId = track.playlistId
         )
     }
 
-    private fun dtoToTrack(dto: com.practicum.myapplication.data.dto.TrackDto): Track {
-        val seconds = dto.trackTimeMillis / 1000
-        val minutes = seconds / 60
-        val trackTime = "%02d:%02d".format(minutes, seconds % 60)
-        return Track(dto.trackName, dto.artistName, trackTime)
+    override fun deleteTracksByPlaylistId(playlistId: Long) {
+        kotlinx.coroutines.runBlocking {
+            trackDao.deleteTracksByPlaylistId(playlistId)
+        }
+    }
+
+    override suspend fun insertTrackToPlaylist(track: Track, playlistId: Long) {
+        trackDao.insertTrack(TrackEntity.fromDomain(track, playlistId))
+    }
+
+    override suspend fun updateTrackFavoriteStatus(track: Track, isFavorite: Boolean) {
+        trackDao.updateFavoriteStatus(track.id, isFavorite)
+    }
+
+    override fun getFavoriteTracks(): Flow<List<Track>> {
+        return trackDao.getFavoriteTracks().map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 }
